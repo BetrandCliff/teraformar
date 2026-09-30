@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated, supabaseRequest } from "@/lib/supabase";
+import { isAdminAuthenticated, typeormRequest } from "@/lib/typeorm";
+import { toDesign } from "@/lib/projects";
 type DesignRow = {
     id: string;
     slug: string;
@@ -9,16 +10,11 @@ type DesignRow = {
 };
 export async function GET() {
     try {
-        const rows = await supabaseRequest<DesignRow[]>("designs", {
+        const rows = await typeormRequest<DesignRow[]>("designs", {
             query: "?select=*&order=created_at.desc",
         });
         return NextResponse.json(
-            rows.map(({ id, slug, title, data }) => ({
-                ...data,
-                id,
-                slug,
-                title,
-            })),
+            rows.map(toDesign),
         );
     } catch (error) {
         return NextResponse.json(
@@ -59,7 +55,7 @@ export async function POST(request: Request) {
                   .replace(/[^a-z0-9]+/g, "-")
                   .replace(/^-|-$/g, "");
     try {
-        const rows = await supabaseRequest<DesignRow[]>("designs", {
+        const rows = await typeormRequest<DesignRow[]>("designs", {
             method: "POST",
             body: { slug, title: data.title, data },
         });

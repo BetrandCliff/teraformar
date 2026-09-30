@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Maximize2, Rotate3D, ZoomIn } from "lucide-react";
 import { getProjects } from "@/lib/projects";
+export const dynamic = "force-dynamic";
 
 export default async function ProjectDetails({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

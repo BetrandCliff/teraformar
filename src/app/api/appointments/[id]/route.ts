@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { supabaseRequest } from "@/lib/supabase";
+import { typeormRequest } from "@/lib/typeorm";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated } from "@/lib/supabase";
+import { isAdminAuthenticated } from "@/lib/typeorm";
 
 type Appointment = {
   id: string;
@@ -76,12 +76,12 @@ export async function PATCH(
     );
   }
   try {
-    const previousRows = await supabaseRequest<Appointment[]>("appointments", {
+    const previousRows = await typeormRequest<Appointment[]>("appointments", {
       query: `?id=eq.${encodeURIComponent(id)}&select=*`,
     });
     const previous = previousRows[0];
     if (!previous) return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
-    const rows = await supabaseRequest<Appointment[]>("appointments", {
+    const rows = await typeormRequest<Appointment[]>("appointments", {
       method: "PATCH",
       query: `?id=eq.${encodeURIComponent(id)}&select=*`,
       body: { status: String(body.status).toLowerCase() },

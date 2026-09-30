@@ -1,2 +1,7 @@
 import { NextResponse } from "next/server";
-export async function POST(request:Request){const url=process.env.SUPABASE_URL;const anon=process.env.SUPABASE_ANON_KEY;if(!url||!anon)return NextResponse.json({error:"Supabase Auth is not configured"},{status:503});let body:{email?:string};try{body=await request.json()}catch{return NextResponse.json({error:"Email is required"},{status:400})}if(!body.email)return NextResponse.json({error:"Email is required"},{status:400});try{const response=await fetch(`${url}/auth/v1/recover`,{method:"POST",headers:{apikey:anon,"Content-Type":"application/json"},body:JSON.stringify({email:body.email}),cache:"no-store"});if(!response.ok){const err=await response.json() as {msg?:string;message?:string};return NextResponse.json({error:err.msg??err.message??"Could not send reset email"},{status:response.status})}return NextResponse.json({ok:true})}catch{return NextResponse.json({error:"Could not reach Supabase Auth"},{status:503})}}
+export async function POST(request: Request) {
+  let body: { email?: string };
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Email is required" }, { status: 400 }); }
+  if (!body.email) return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  return NextResponse.json({ error: "Password resets are managed by the site administrator. Update this user's password_hash in the PostgreSQL users table." }, { status: 501 });
+}

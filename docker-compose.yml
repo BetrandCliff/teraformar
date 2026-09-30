@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: buildvision-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: buildvision
+      POSTGRES_PASSWORD: buildvision_password
+      POSTGRES_DB: buildvision
+    ports:
+      - "5432:5432"
+    volumes:
+      - buildvision_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  buildvision_postgres_data:

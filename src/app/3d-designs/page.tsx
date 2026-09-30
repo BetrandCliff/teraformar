@@ -1,6 +1,7 @@
 import PageHero from "@/components/PageHero";
 import DesignCard from "@/components/DesignCard";
 import { getDesigns } from "@/lib/projects";
+export const dynamic = "force-dynamic";
 
 export default async function Designs() {
   const designs = await getDesigns();

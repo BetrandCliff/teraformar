@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { getDesigns } from "@/lib/projects";
 import AdminCollection from "@/components/AdminCollection";
+export const dynamic = "force-dynamic";
 
 export default async function AdminDesigns() {
   const designs = await getDesigns();

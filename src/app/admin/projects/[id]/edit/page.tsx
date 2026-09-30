@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import ProjectEditor from "@/components/ProjectEditor";
 import { getProjects } from "@/lib/projects";
+export const dynamic = "force-dynamic";
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

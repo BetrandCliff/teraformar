@@ -4,6 +4,7 @@ import ProjectCard from "@/components/ProjectCard";
 import SectionTitle from "@/components/SectionTitle";
 import { getProjects } from "@/lib/projects";
 import { getSiteSettings } from "@/lib/settings";
+export const dynamic = "force-dynamic";
 
 const values = [
   { Icon: ShieldCheck, title: "Craft with care", text: "Careful planning and considered execution at every stage." },

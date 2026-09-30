@@ -1,5 +1,5 @@
 import "server-only";
-import { supabaseRequest } from "@/lib/supabase";
+import { typeormRequest } from "@/lib/typeorm";
 export type AboutStat = { value: string; label: string };
 export type AboutValue = { title: string; description: string };
 export type SiteSettings = {
@@ -54,7 +54,7 @@ export const defaultSiteSettings: SiteSettings = {
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   try {
-    const rows = await supabaseRequest<{ data: Partial<SiteSettings> }[]>("site_settings", { query: "?id=eq.1&select=data" });
+    const rows = await typeormRequest<{ data: Partial<SiteSettings> }[]>("site_settings", { query: "?id=eq.1&select=data" });
     return { ...defaultSiteSettings, ...rows[0]?.data };
   } catch {
     return defaultSiteSettings;

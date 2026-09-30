@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Maximize2, Rotate3D, ZoomIn, Move3D } from "lucide-react";
 import { getDesigns } from "@/lib/projects";
+export const dynamic = "force-dynamic";
 export default async function DesignDetails({
   params,
 }: {

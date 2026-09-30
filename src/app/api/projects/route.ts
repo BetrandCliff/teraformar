@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { supabaseRequest } from "@/lib/supabase";
+import { typeormRequest } from "@/lib/typeorm";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated } from "@/lib/supabase";
+import { isAdminAuthenticated } from "@/lib/typeorm";
+import { toProject } from "@/lib/projects";
 
 type ProjectRow = { id: string; slug: string; title: string; data: Record<string, unknown> };
 
 export async function GET() {
   try {
-    const rows = await supabaseRequest<ProjectRow[]>("projects", { query: "?select=*&order=created_at.desc" });
-    return NextResponse.json(rows.map(({ data, ...row }) => ({ ...data, ...row })));
+    const rows = await typeormRequest<ProjectRow[]>("projects", { query: "?select=*&order=created_at.desc" });
+    return NextResponse.json(rows.map(toProject));
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not load projects" }, { status: 503 });
   }
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
   }
   const slug = typeof data.slug === "string" && data.slug ? data.slug : data.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   try {
-    const rows = await supabaseRequest<ProjectRow[]>("projects", { method: "POST", body: { slug, title: data.title, data } });
+    const rows = await typeormRequest<ProjectRow[]>("projects", { method: "POST", body: { slug, title: data.title, data } });
     const row = rows[0];
     return NextResponse.json({ ...row.data, id: row.id, slug: row.slug, title: row.title }, { status: 201 });
   } catch (error) {

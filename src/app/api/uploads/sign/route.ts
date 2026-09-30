@@ -1,107 +1,31 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
-import { isAdminAuthenticated } from "@/lib/supabase";
+import { randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { isAdminAuthenticated } from "@/lib/session";
 
-const mediaTypes = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/gif",
-  "model/gltf-binary",
-  "model/gltf+json",
-  "application/octet-stream",
-  "application/pdf",
-]);
-
+export const runtime = "nodejs";
+const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "model/gltf-binary", "model/gltf+json", "application/octet-stream", "application/pdf"]);
 export async function POST(request: Request) {
   const token = (await cookies()).get("buildvision_session")?.value;
-  if (!(await isAdminAuthenticated(token)))
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const url = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey)
-    return NextResponse.json(
-      { error: "Supabase is not configured" },
-      { status: 503 },
-    );
-
-  let input: {
-    filename?: string;
-    contentType?: string;
-    size?: number;
-    kind?: string;
-  };
+  if (!(await isAdminAuthenticated(token))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    input = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Upload details are required" },
-      { status: 400 },
-    );
-  }
-  const { filename, contentType, size, kind } = input;
-  const ext = filename?.split(".").pop()?.toLowerCase();
-  const accepted =
-    !!contentType &&
-    mediaTypes.has(contentType) &&
-    ((contentType.startsWith("image/") && ext !== "svg") ||
-      (ext === "pdf" && contentType === "application/pdf") ||
-      ((ext === "glb" || ext === "gltf") &&
-        [
-          "model/gltf-binary",
-          "model/gltf+json",
-          "application/octet-stream",
-        ].includes(contentType)));
-  if (
-    !filename ||
-    !accepted ||
-    typeof size !== "number" ||
-    size <= 0 ||
-    size > 100 * 1024 * 1024 ||
-    !["projects", "designs", "site"].includes(kind ?? "")
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "Choose a supported image, PDF or GLB/GLTF model file under 100 MB",
-      },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const client = createClient(url, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const safeName = filename
-      .normalize("NFKD")
-      .replace(/[^a-zA-Z0-9._-]/g, "-");
-    const path = `${kind}/${crypto.randomUUID()}-${safeName}`;
-    const bucket = process.env.SUPABASE_MEDIA_BUCKET || "projects";
-    const { data, error } = await client.storage
-      .from(bucket)
-      .createSignedUploadUrl(path);
-    if (error) throw error;
-    const { data: publicAsset } = client.storage
-      .from(bucket)
-      .getPublicUrl(path);
-    return NextResponse.json({
-      bucket,
-      path,
-      token: data.token,
-      publicUrl: publicAsset.publicUrl,
-    });
+    const form = await request.formData();
+    const file = form.get("file");
+    const kind = String(form.get("kind") ?? "");
+    if (!(file instanceof File) || !file.size) return NextResponse.json({ error: "Choose a file to upload" }, { status: 400 });
+    const ext = path.extname(file.name).toLowerCase();
+    const valid = allowedTypes.has(file.type) && ((file.type.startsWith("image/") && ext !== ".svg") || (ext === ".pdf" && file.type === "application/pdf") || ([".glb", ".gltf"].includes(ext) && ["model/gltf-binary", "model/gltf+json", "application/octet-stream"].includes(file.type)));
+    if (!valid || !["projects", "designs", "site"].includes(kind)) return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
+    if (file.size > 100 * 1024 * 1024) return NextResponse.json({ error: "Files must be 100 MB or smaller" }, { status: 413 });
+    const safeName = path.basename(file.name).normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-").slice(-120);
+    const folder = path.join(process.cwd(), "public", "uploads", kind);
+    await mkdir(folder, { recursive: true });
+    const filename = `${randomUUID()}-${safeName}`;
+    await writeFile(path.join(folder, filename), Buffer.from(await file.arrayBuffer()), { flag: "wx" });
+    return NextResponse.json({ publicUrl: `/uploads/${kind}/${filename}` }, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Could not prepare the upload",
-      },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not save uploaded file" }, { status: 500 });
   }
 }

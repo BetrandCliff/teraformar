@@ -8,11 +8,31 @@ A professional construction and architecture website built with Next.js. The pla
 * Tailwind CSS v4
 * Lucide React
 * App Router
-* Supabase-ready
-* Supabase Storage-ready
+* PostgreSQL via TypeORM
+* Local file uploads stored under `public/uploads`
 * React Three Fiber / Three.js-ready
 * Responsive design
 * Server-side data fetching ready
+
+## cPanel PostgreSQL setup
+
+The app connects directly to PostgreSQL through TypeORM. In cPanel, create a PostgreSQL database and database user, grant that user access to the database, and run [`database/cpanel-postgres.sql`](database/cpanel-postgres.sql) using phpPgAdmin or the cPanel PostgreSQL terminal. The app needs `projects`, `designs`, `documents`, `appointments`, `messages`, and `site_settings` with the columns declared in that file. If you already created these tables with different columns, compare and reconcile their columns before deploying; `CREATE TABLE IF NOT EXISTS` does not modify existing tables.
+
+Set these environment variables in cPanel's Node.js application configuration (or in the app's ignored `.env` file for local development):
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=CPANEL_DB_USER
+DB_PASSWORD=your-database-password
+DB_DATABASE=CPANEL_DB_NAME
+DB_SSL=false
+ADMIN_EMAILS=admin@example.com
+ADMIN_PASSWORD=use-a-long-unique-password
+SESSION_SECRET=use-a-long-random-secret
+```
+
+cPanel often prefixes database and database-user names with the account username. Use the exact host, port, database, and prefixed user names cPanel shows. `DB_SSL=true` enables TLS if your host requires it. TypeORM schema synchronization is disabled, so the app will not automatically change your tables. For production, use cPanel's Node.js application feature with a supported Node version and point its startup to this Next.js app. The app process needs write permission to `public/uploads`; uploaded file URLs are stored in the `documents.file_url` field or inside project/design JSON data. Back up that folder along with PostgreSQL. Contact form email still uses the optional Resend settings below.
 
 ---
 
@@ -259,7 +279,7 @@ buildvision/
 │   │
 │   ├── lib/
 │   │   ├── data.ts
-│   │   ├── supabase/
+│   │   ├── database/
 │   │   │   ├── client.ts
 │   │   │   ├── server.ts
 │   │   │   └── middleware.ts
@@ -373,7 +393,7 @@ Contains reusable application logic and external service configuration.
 
 Examples:
 
-* Supabase clients
+* TypeORM data source
 * Authentication helpers
 * Storage helpers
 * Database queries
@@ -439,21 +459,19 @@ type Design = {
 
 ---
 
-# Supabase
+# Data and file storage
 
-The application is designed to connect to Supabase for:
+The application connects directly to PostgreSQL and stores uploaded files on the server for:
 
-* Authentication
-* PostgreSQL database
-* Storage
-* Row Level Security
+* PostgreSQL data
+* Local file storage
 * Admin authentication
 * Project management
 * 3D design management
 * Appointment management
 * Contact messages
 
-Recommended storage buckets:
+Uploaded files are organized under `public/uploads`:
 
 ```text
 project-images
@@ -495,7 +513,7 @@ should be redirected to:
 /admin/login
 ```
 
-Authentication and authorization should be handled server-side using Supabase Auth and protected middleware/routes.
+Authentication and authorization are handled server-side by protected middleware and API routes. Configure the admin email and password using the cPanel environment variables described above.
 
 ---
 
@@ -510,7 +528,7 @@ The final implementation should:
 3. Allow a visitor to submit an appointment.
 4. Validate availability on the server.
 5. Prevent duplicate bookings.
-6. Store the appointment in Supabase.
+6. Store the appointment in PostgreSQL.
 7. Display a confirmation page.
 8. Notify the administrator.
 9. Optionally send a confirmation email to the client.
@@ -553,31 +571,36 @@ http://localhost:3000/admin
 
 # Environment Variables
 
-Create a `.env.local` file:
+Use `.env.local` locally or configure these variables in cPanel:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=CPANEL_DB_USER
+DB_PASSWORD=your-database-password
+DB_DATABASE=CPANEL_DB_NAME
+DB_SSL=false
+ADMIN_EMAILS=admin@example.com
+ADMIN_PASSWORD=use-a-long-unique-password
+SESSION_SECRET=use-a-long-random-secret
 ```
 
 Additional variables can be added later for:
 
 * Email provider
 * Appointment notifications
-* Storage
 * 3D model processing
 * Other external services
 
-Never expose the Supabase service-role key to the browser.
+Keep database credentials and session secrets server-side. Do not add them to `NEXT_PUBLIC_` variables.
 
 ---
 
 # Next Implementation Steps
 
-### 1. Connect Supabase
+### 1. Connect PostgreSQL
 
-Create the Supabase project and configure:
+Configure the PostgreSQL connection variables above:
 
 * Database
 * Authentication
@@ -606,9 +629,9 @@ Replace:
 src/lib/data.ts
 ```
 
-with server-side Supabase queries.
+with server-side TypeORM queries.
 
-### 4. Configure Supabase Storage
+### 4. Configure local uploads
 
 Create storage buckets for:
 
@@ -647,7 +670,7 @@ Connect:
 /admin/login
 ```
 
-to Supabase Auth.
+to the environment configured in cPanel.
 
 Protect all `/admin/*` routes.
 
@@ -696,7 +719,7 @@ with the client's actual content.
 
 Before deploying to production:
 
-* Enable Supabase Row Level Security.
+* Keep database credentials in server-side environment variables.
 * Protect administrator routes.
 * Validate all form submissions server-side.
 * Validate uploaded files.
@@ -736,11 +759,11 @@ The overall application is organized into three major areas:
           └── Booking                 └── Settings
                         │
                         ▼
-                    SUPABASE
+                  PostgreSQL
                         │
           ┌─────────────┼─────────────┐
           │             │             │
-       Database       Auth          Storage
+       Database     Admin login     Uploads
           │             │             │
       Projects       Admins       Images
       Designs                     Documents

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { supabaseRequest } from "@/lib/supabase";
+import { typeormRequest } from "@/lib/typeorm";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated } from "@/lib/supabase";
+import { isAdminAuthenticated } from "@/lib/typeorm";
+import { sendFormEmail } from "@/lib/mail";
 
 export async function GET() {
   const token = (await cookies()).get("buildvision_session")?.value;
   if (!await isAdminAuthenticated(token)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  try { return NextResponse.json(await supabaseRequest("messages", { query: "?select=*&order=created_at.desc" })); }
+  try { return NextResponse.json(await typeormRequest("messages", { query: "?select=*&order=created_at.desc" })); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not load messages" }, { status: 503 }); }
 }
 
@@ -17,7 +18,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Name, valid email, and message are required" }, { status: 400 });
   }
   try {
-    const rows = await supabaseRequest<unknown[]>("messages", { method: "POST", body });
-    return NextResponse.json(rows[0], { status: 201 });
+    const fields = ["name", "email", "phone", "project_type", "message"] as const;
+    const lines = fields.filter((field) => typeof body[field] === "string")
+      .map((field) => `${field.replace("_", " ")}: ${String(body[field]).trim()}`);
+    const rows = await typeormRequest<Record<string, unknown>[]>("messages", { method: "POST", body: Object.fromEntries(fields.filter((field) => typeof body[field] === "string").map((field) => [field, String(body[field]).trim()])) });
+    await sendFormEmail("New website application", lines, body.email).catch(() => undefined);
+    return NextResponse.json({ ok: true, message: rows[0] }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not save message" }, { status: 503 }); }
 }

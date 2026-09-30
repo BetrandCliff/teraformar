@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { supabaseRequest } from "@/lib/supabase";
+import { typeormRequest } from "@/lib/typeorm";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated } from "@/lib/supabase";
+import { isAdminAuthenticated } from "@/lib/typeorm";
 
 export async function GET() {
   const token = (await cookies()).get("buildvision_session")?.value;
@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     return NextResponse.json(
-      await supabaseRequest("appointments", {
+      await typeormRequest("appointments", {
         query: "?select=*&order=created_at.desc",
       }),
     );
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     );
   }
   try {
-    const rows = await supabaseRequest<unknown[]>("appointments", {
+    const rows = await typeormRequest<unknown[]>("appointments", {
       method: "POST",
       body,
     });

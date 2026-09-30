@@ -1,8 +1,9 @@
 import { ArrowUpRight, Box, CalendarDays, CheckCircle2, FolderKanban, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { getDesigns, getProjects } from "@/lib/projects";
-import { supabaseRequest } from "@/lib/supabase";
+import { typeormRequest } from "@/lib/typeorm";
 import { services } from "@/lib/data";
+export const dynamic = "force-dynamic";
 
 type Appointment = { id: string; name: string; service_id: string | null; appointment_date: string; status: string };
 
@@ -17,7 +18,7 @@ export default async function Admin() {
   const [projects, designs, appointments] = await Promise.all([
     getProjects(),
     getDesigns(),
-    supabaseRequest<Appointment[]>("appointments", { query: "?select=id,name,service_id,appointment_date,status&order=created_at.desc&limit=5" }).catch(() => []),
+    typeormRequest<Appointment[]>("appointments", { query: "?select=id,name,service_id,appointment_date,status&order=created_at.desc&limit=5" }).catch(() => []),
   ]);
   const stats = [
     { title: "Projects", count: projects.length, href: "/admin/projects", Icon: FolderKanban, note: "Project portfolio" },

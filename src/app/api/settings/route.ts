@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { isAdminAuthenticated, supabaseRequest } from "@/lib/supabase";
+import { isAdminAuthenticated, typeormRequest } from "@/lib/typeorm";
 export async function GET() {
     try {
-        const rows = await supabaseRequest<{ data: Record<string, unknown> }[]>(
+        const rows = await typeormRequest<{ data: Record<string, unknown> }[]>(
             "site_settings",
             { query: "?id=eq.1&select=data" },
         );
@@ -37,12 +37,12 @@ export async function PATCH(request: Request) {
         );
     }
     try {
-        const existing = await supabaseRequest<{ data: Record<string, unknown> }[]>(
+        const existing = await typeormRequest<{ data: Record<string, unknown> }[]>(
             "site_settings",
             { query: "?id=eq.1&select=data" },
         );
         const mergedData = { ...(existing[0]?.data ?? {}), ...data };
-        const rows = await supabaseRequest<{ data: Record<string, unknown> }[]>(
+        const rows = await typeormRequest<{ data: Record<string, unknown> }[]>(
             "site_settings",
             {
                 method: "POST",

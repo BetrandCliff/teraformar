@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated, supabaseRequest } from "@/lib/supabase";
+import { isAdminAuthenticated, typeormRequest } from "@/lib/typeorm";
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> },
@@ -32,12 +32,14 @@ export async function PATCH(
                   .replace(/[^a-z0-9]+/g, "-")
                   .replace(/^-|-$/g, "");
     try {
-        const rows = await supabaseRequest("designs", {
+        const rows = await typeormRequest<Record<string, unknown>[]>("designs", {
             method: "PATCH",
             query: `?id=eq.${encodeURIComponent(id)}`,
             body: { title: data.title, slug, data },
         });
-        return NextResponse.json(rows);
+        if (!rows.length)
+            return NextResponse.json({ error: "Design not found" }, { status: 404 });
+        return NextResponse.json(rows[0]);
     } catch (error) {
         return NextResponse.json(
             {

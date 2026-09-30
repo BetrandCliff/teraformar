@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated, supabaseRequest } from "@/lib/supabase";
+import { isAdminAuthenticated, typeormRequest } from "@/lib/typeorm";
 
 type ClientMessage = {
   id: string;
@@ -35,7 +35,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   try {
-    const rows = await supabaseRequest<ClientMessage[]>("messages", { query: `?id=eq.${encodeURIComponent(id)}&select=id,name,email,subject,project_type` });
+    const rows = await typeormRequest<ClientMessage[]>("messages", { query: `?id=eq.${encodeURIComponent(id)}&select=id,name,email,subject,project_type` });
     const client = rows[0];
     if (!client) return NextResponse.json({ error: "Message not found" }, { status: 404 });
 
