@@ -39,8 +39,14 @@ echo "Commit: $TRIGGER_COMMIT" >> "$LOG"
 echo "Activating Node environment..." >> "$LOG"
 source "$NODE_ENV/bin/activate"
 
-echo "Installing dependencies..." >> "$LOG"
-npm ci --include=dev >> "$LOG" 2>&1
+if [ $? -ne 0 ]; then
+    echo "Failed to activate Node environment: $(date)" >> "$LOG"
+    rm -f "$LOCK"
+    exit 1
+fi
+
+echo "Installing production dependencies..." >> "$LOG"
+npm ci --omit=dev >> "$LOG" 2>&1
 
 if [ $? -ne 0 ]; then
     echo "npm ci FAILED: $(date)" >> "$LOG"
@@ -48,14 +54,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Building application..." >> "$LOG"
-npm run build >> "$LOG" 2>&1
-
-if [ $? -ne 0 ]; then
-    echo "BUILD FAILED: $(date)" >> "$LOG"
-    rm -f "$LOCK"
-    exit 1
-fi
+echo "Skipping production build - build already completed in GitHub Actions." >> "$LOG"
 
 echo "Restarting application..." >> "$LOG"
 mkdir -p "$PROJECT/tmp"
