@@ -8,8 +8,9 @@ export async function isAdminAuthenticated(token?: string) {
   const expected = createHmac("sha256", secret).update(`${email}.${expires}`).digest("hex");
   const a = Buffer.from(signature); const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-  const allowed = process.env.ADMIN_EMAILS?.split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
-  return !allowed?.length || allowed.includes(Buffer.from(email, "base64url").toString("utf8").toLowerCase());
+  // The login API only issues this signed cookie after validating an active
+  // PostgreSQL user. An old ADMIN_EMAILS allowlist would reject valid DB users.
+  return true;
 }
 export function createAdminSession(email: string) {
   const secret = process.env.SESSION_SECRET;

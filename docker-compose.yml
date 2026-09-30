@@ -8,9 +8,10 @@ services:
       POSTGRES_PASSWORD: buildvision_password
       POSTGRES_DB: buildvision
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - buildvision_postgres_data:/var/lib/postgresql/data
+      - ./database/docker-init.sql:/docker-entrypoint-initdb.d/01-users.sql:ro
 
 volumes:
   buildvision_postgres_data:

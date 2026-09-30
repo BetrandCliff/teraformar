@@ -31,4 +31,7 @@ Thumbs.db
 *.tsbuildinfo
 next-env.d.ts
 
+.yml
+*.sql
+**.sql
 
