@@ -25,6 +25,10 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Package Next.js build
+        run: |
+          zip -r .next-deploy.zip .next -x ".next/cache/*"
+
       - name: Create deployment trigger
         run: |
           echo "${{ github.sha }}" > .deploy-trigger
@@ -46,6 +50,35 @@ jobs:
             **/.env
             **/.env.*
             **/node_modules/**
-            **/.next/cache/**
+            **/.next/**
+            **/.next-deploy.zip
             **/deploy.log
             **/.deployed-commit
+
+      - name: Upload Next.js build
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          protocol: ftps
+          server-dir: ./
+          local-dir: ./
+          exclude: |
+            **
+            !.next-deploy.zip
+
+      - name: Upload deployment trigger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          protocol: ftps
+          server-dir: ./
+          local-dir: ./
+          exclude: |
+            **
+            !.deploy-trigger
