@@ -63,6 +63,7 @@ export default function SettingsPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Could not save settings.");
       setValues(updated);
+      window.dispatchEvent(new CustomEvent("site-settings-updated", { detail: { companyName: updated.companyName } }));
       setStatus("Settings saved successfully.");
       showToast("Settings saved successfully.");
     } catch (error) {
