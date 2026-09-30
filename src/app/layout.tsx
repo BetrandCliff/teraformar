@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-// import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageMotion from "@/components/PageMotion";
 import ToastProvider from "@/components/ToastProvider";
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body><ToastProvider><ThemeProvider>
-        {/* <Navbar /> */}
+        <Navbar />
         <main><PageMotion>{children}</PageMotion></main>
         <Footer />
       </ThemeProvider></ToastProvider></body>
