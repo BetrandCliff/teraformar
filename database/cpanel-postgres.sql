@@ -2,6 +2,7 @@
 -- Optional design details are stored in the designs.data JSONB field.
 CREATE TABLE IF NOT EXISTS projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_by uuid,
   slug text UNIQUE NOT NULL,
   title text NOT NULL,
   data jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -9,6 +10,7 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 CREATE TABLE IF NOT EXISTS designs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_by uuid,
   slug text UNIQUE NOT NULL,
   title text NOT NULL,
   data jsonb DEFAULT '{}'::jsonb,

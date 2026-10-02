@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       { error: "Invalid email or password" },
       { status: 401 },
     );
-  const session = createAdminSession(user.email, body.rememberMe === true);
+  const session = createAdminSession(user.id, user.email, body.rememberMe === true);
   const out = NextResponse.json({ ok: true });
   out.cookies.set("buildvision_session", session.token, {
     httpOnly: true,

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdminAuthenticated, typeormRequest } from "@/lib/typeorm";
+import { typeormRequest } from "@/lib/typeorm";
+import { getAdminIdFromSession, isAdminAuthenticated } from "@/lib/session";
+import { createUuid } from "@/lib/uuid";
 import { toDesign } from "@/lib/projects";
 type DesignRow = {
     id: string;
@@ -32,6 +34,9 @@ export async function POST(request: Request) {
     const token = (await cookies()).get("buildvision_session")?.value;
     if (!(await isAdminAuthenticated(token)))
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const adminId = getAdminIdFromSession(token);
+    if (!adminId)
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     let data: Record<string, unknown>;
     try {
         data = await request.json();
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
     try {
         const rows = await typeormRequest<DesignRow[]>("designs", {
             method: "POST",
-            body: { slug, title: data.title, data },
+            body: { id: createUuid(), created_by: adminId, slug, title: data.title, data },
         });
         const row = rows[0];
         return NextResponse.json(
