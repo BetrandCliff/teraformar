@@ -1,3 +1,90 @@
+# # name: Deploy Teraformar
+
+# # on:
+# #   push:
+# #     branches:
+# #       - main
+
+# # jobs:
+# #   deploy:
+# #     runs-on: ubuntu-latest
+
+# #     steps:
+# #       - name: Checkout repository
+# #         uses: actions/checkout@v4
+
+# #       - name: Setup Node.js
+# #         uses: actions/setup-node@v4
+# #         with:
+# #           node-version: 22
+# #           cache: npm
+
+# #       - name: Install dependencies
+# #         run: npm ci
+
+# #       - name: Build application
+# #         run: npm run build
+
+# #       - name: Package Next.js build
+# #         run: |
+# #           zip -r .next-deploy.zip .next -x ".next/cache/*"
+
+# #       - name: Create deployment trigger
+# #         run: |
+# #           echo "${{ github.sha }}" > .deploy-trigger
+
+# #       - name: Deploy application files
+# #         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+# #         with:
+# #           server: ${{ secrets.FTP_SERVER }}
+# #           username: ${{ secrets.FTP_USERNAME }}
+# #           password: ${{ secrets.FTP_PASSWORD }}
+# #           port: ${{ secrets.FTP_PORT }}
+# #           protocol: ftps
+# #           server-dir: ./
+# #           local-dir: ./
+# #           exclude: |
+# #             **/.git*
+# #             **/.git*/**
+# #             **/.github/**
+# #             **/.env
+# #             **/.env.*
+# #             **/node_modules/**
+# #             **/.next/**
+# #             **/.next-deploy.zip
+# #             **/deploy.log
+# #             **/.deployed-commit
+
+# #       - name: Upload Next.js build
+# #         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+# #         with:
+# #           server: ${{ secrets.FTP_SERVER }}
+# #           username: ${{ secrets.FTP_USERNAME }}
+# #           password: ${{ secrets.FTP_PASSWORD }}
+# #           port: ${{ secrets.FTP_PORT }}
+# #           protocol: ftps
+# #           server-dir: ./
+# #           local-dir: ./
+# #           exclude: |
+# #             **
+# #             !.next-deploy.zip
+
+# #       - name: Upload deployment trigger
+# #         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+# #         with:
+# #           server: ${{ secrets.FTP_SERVER }}
+# #           username: ${{ secrets.FTP_USERNAME }}
+# #           password: ${{ secrets.FTP_PASSWORD }}
+# #           port: ${{ secrets.FTP_PORT }}
+# #           protocol: ftps
+# #           server-dir: ./
+# #           local-dir: ./
+# #           exclude: |
+# #             **
+# #             !.deploy-trigger
+
+
+
 # name: Deploy Teraformar
 
 # on:
@@ -43,6 +130,8 @@
 #           protocol: ftps
 #           server-dir: ./
 #           local-dir: ./
+#           timeout: 120000
+#           log-level: verbose
 #           exclude: |
 #             **/.git*
 #             **/.git*/**
@@ -54,6 +143,7 @@
 #             **/.next-deploy.zip
 #             **/deploy.log
 #             **/.deployed-commit
+#             **/stderr.log
 
 #       - name: Upload Next.js build
 #         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -65,6 +155,8 @@
 #           protocol: ftps
 #           server-dir: ./
 #           local-dir: ./
+#           timeout: 120000
+#           log-level: verbose
 #           exclude: |
 #             **
 #             !.next-deploy.zip
@@ -79,12 +171,15 @@
 #           protocol: ftps
 #           server-dir: ./
 #           local-dir: ./
+#           timeout: 120000
+#           log-level: verbose
 #           exclude: |
 #             **
-#             !.deploy-trigger
+#             !.deploy-
 
 
 
+```yaml
 name: Deploy Teraformar
 
 on:
@@ -120,7 +215,7 @@ jobs:
         run: |
           echo "${{ github.sha }}" > .deploy-trigger
 
-      - name: Deploy application files
+      - name: Deploy to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -140,40 +235,7 @@ jobs:
             **/.env.*
             **/node_modules/**
             **/.next/**
-            **/.next-deploy.zip
             **/deploy.log
             **/.deployed-commit
             **/stderr.log
-
-      - name: Upload Next.js build
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          protocol: ftps
-          server-dir: ./
-          local-dir: ./
-          timeout: 120000
-          log-level: verbose
-          exclude: |
-            **
-            !.next-deploy.zip
-
-      - name: Upload deployment trigger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          protocol: ftps
-          server-dir: ./
-          local-dir: ./
-          timeout: 120000
-          log-level: verbose
-          exclude: |
-            **
-            !.deploy-trigger
-
+```
