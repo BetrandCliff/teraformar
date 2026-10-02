@@ -18,10 +18,12 @@ export default function NewDesignPage() {
       <h1 className="mt-1 text-3xl font-black tracking-tight">
         Create a 3D design
       </h1>
+      
       <p className="mt-2 text-sm text-slate-500">
         Add specifications, upload your cover image and attach an optional GLB
         model.
       </p>
+
       <DesignEditor />
     </div>
   );
