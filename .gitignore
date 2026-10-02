@@ -34,4 +34,7 @@ next-env.d.ts
 .yml
 *.sql
 **.sql
+!database/docker-init.sql
+!database/design-floor-details.sql
+!database/project-floor-details.sql
 

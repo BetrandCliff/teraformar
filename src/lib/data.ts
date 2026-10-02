@@ -4,12 +4,23 @@ export type Project = {
   year: number; area: string; landSize?: string; image: string; gallery: string[];
   floorPlans: string[]; architecturalDrawings: string[]; structuralDrawings: string[];
   documents: string[]; description: string; bedrooms: number; bathrooms: number;
-  floors: number; duration: string;
+  floors: number; duration: string; floorDetails?: DesignFloor[];
+};
+export type DesignRoom = {
+  name?: string;
+  type?: string;
+  area?: string;
+  notes?: string;
+};
+export type DesignFloor = {
+  label?: string;
+  rooms: DesignRoom[];
 };
 export type Design = Project & {
   modelUrl?: string; parkingSpaces: number; kitchens: number; livingRooms: number;
   diningRooms: number; dimensions: string; estimatedConstruction: string;
   interiorImages: string[]; specifications: string[];
+  floorDetails?: DesignFloor[];
 };
 
 const seeds: Omit<Project, "id">[] = [

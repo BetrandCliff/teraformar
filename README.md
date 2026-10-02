@@ -18,6 +18,8 @@ A professional construction and architecture website built with Next.js. The pla
 
 The app connects directly to PostgreSQL through TypeORM. In cPanel, create a PostgreSQL database and database user, grant that user access to the database, and run [`database/cpanel-postgres.sql`](database/cpanel-postgres.sql) using phpPgAdmin or the cPanel PostgreSQL terminal. The app needs `projects`, `designs`, `documents`, `appointments`, `messages`, and `site_settings` with the columns declared in that file. If you already created these tables with different columns, compare and reconcile their columns before deploying; `CREATE TABLE IF NOT EXISTS` does not modify existing tables.
 
+Designs store floors and their rooms in the optional `designs.data` JSONB field (`floorDetails`). New Docker databases create the designs table during initialization. To update an existing database, run [`database/design-floor-details.sql`](database/design-floor-details.sql) once with the database owner account. This migration creates the table if it is missing and allows `data` to be omitted or null; the design title and slug remain required. For a Docker database, run `docker exec -i buildvision-postgres psql -U buildvision -d buildvision < database/design-floor-details.sql` from the project directory.
+
 Set these environment variables in cPanel's Node.js application configuration (or in the app's ignored `.env` file for local development):
 
 ```env
