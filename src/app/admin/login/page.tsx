@@ -22,11 +22,13 @@ export default function AdminLoginPage() {
     event.preventDefault(); setError(""); setLoading(true);
     const form = new FormData(event.currentTarget);
     try {
-      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: form.get("email"), password: form.get("password") }) });
+      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: form.get("email"), password: form.get("password"), rememberMe: form.get("rememberMe") === "on" }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Unable to sign in");
       showToast("Signed in successfully.");
-      router.replace("/admin"); router.refresh();
+      const requestedPath = new URLSearchParams(window.location.search).get("next");
+      const destination = requestedPath?.startsWith("/admin/") && !requestedPath.startsWith("//") ? requestedPath : "/admin";
+      router.replace(destination); router.refresh();
     } catch (reason) { const message = reason instanceof Error ? reason.message : "Unable to sign in"; setError(message); showToast(message, "error"); }
     finally { setLoading(false); }
   }
@@ -208,6 +210,7 @@ export default function AdminLoginPage() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
+                    name="rememberMe"
                     className="w-4 h-4 rounded border-zinc-300 text-orange-500 focus:ring-orange-500"
                   />
 

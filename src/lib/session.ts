@@ -12,11 +12,12 @@ export async function isAdminAuthenticated(token?: string) {
   // PostgreSQL user. An old ADMIN_EMAILS allowlist would reject valid DB users.
   return true;
 }
-export function createAdminSession(email: string) {
+export function createAdminSession(email: string, rememberMe = false) {
   const secret = process.env.SESSION_SECRET;
   if (!secret) throw new Error("SESSION_SECRET is not configured");
   const encoded = Buffer.from(email.toLowerCase()).toString("base64url");
-  const expires = String(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 12 * 60 * 60;
+  const expires = String(Date.now() + maxAge * 1000);
   const signature = createHmac("sha256", secret).update(`${encoded}.${expires}`).digest("hex");
-  return { token: `${encoded}.${expires}.${signature}`, maxAge: 7 * 24 * 60 * 60 };
+  return { token: `${encoded}.${expires}.${signature}`, maxAge, rememberMe };
 }

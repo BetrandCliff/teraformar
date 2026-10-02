@@ -4,7 +4,9 @@ export type Project = {
   year: number; area: string; landSize?: string; image: string; gallery: string[];
   floorPlans: string[]; architecturalDrawings: string[]; structuralDrawings: string[];
   documents: string[]; description: string; bedrooms: number; bathrooms: number;
-  floors: number; duration: string; floorDetails?: DesignFloor[];
+  floors: number; duration: string; floorDetails?: DesignFloor[]; videoUrl?: string;
+  dimensions?: string; estimatedConstruction?: string; parkingSpaces?: number;
+  kitchens?: number; livingRooms?: number; diningRooms?: number; specifications?: string[];
 };
 export type DesignRoom = {
   name?: string;
@@ -15,6 +17,12 @@ export type DesignRoom = {
 export type DesignFloor = {
   label?: string;
   area?: string;
+  description?: string;
+  apartments?: DesignApartment[];
+  rooms: DesignRoom[];
+};
+export type DesignApartment = {
+  label?: string;
   rooms: DesignRoom[];
 };
 export type Design = Project & {

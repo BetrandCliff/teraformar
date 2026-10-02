@@ -1,18 +1,28 @@
-import type { Design, DesignFloor, DesignRoom, Project } from "@/lib/data";
+import type { Design, DesignApartment, DesignFloor, DesignRoom, Project } from "@/lib/data";
 import { typeormRequest } from "@/lib/typeorm";
 
 type ProjectRow = { id: string; slug: string; title: string; data: Record<string, unknown> };
 
 const strings = (value: unknown): string[] => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 const text = (value: unknown): string => typeof value === "string" ? value : "";
+const externalUrl = (value: unknown): string => {
+  const url = text(value);
+  try { return ["http:", "https:"].includes(new URL(url).protocol) ? url : ""; }
+  catch { return ""; }
+};
 const floorDetails = (value: unknown): DesignFloor[] => {
   if (!Array.isArray(value)) return [];
   return value.filter((floor): floor is Record<string, unknown> => !!floor && typeof floor === "object").map((floor) => ({
     label: text(floor.label),
     area: text(floor.area),
+    description: text(floor.description),
     rooms: Array.isArray(floor.rooms) ? floor.rooms.filter((room): room is Record<string, unknown> => !!room && typeof room === "object").map((room): DesignRoom => ({
       name: text(room.name), type: text(room.type), area: text(room.area), notes: text(room.notes),
     })) : [],
+    apartments: Array.isArray(floor.apartments) ? floor.apartments.filter((apartment): apartment is Record<string, unknown> => !!apartment && typeof apartment === "object").map((apartment): DesignApartment => ({
+      label: text(apartment.label),
+      rooms: Array.isArray(apartment.rooms) ? apartment.rooms.filter((room): room is Record<string, unknown> => !!room && typeof room === "object").map((room): DesignRoom => ({ name: text(room.name), type: text(room.type), area: text(room.area), notes: text(room.notes) })) : [],
+    })) : undefined,
   }));
 };
 
@@ -40,7 +50,15 @@ export function toProject(row: ProjectRow): Project {
     bathrooms: Number(data.bathrooms ?? 0),
     floors: Number(data.floors ?? 1),
     floorDetails: floorDetails(data.floorDetails),
-    duration: text(data.duration),
+    videoUrl: externalUrl(data.videoUrl),
+    dimensions: text(data.dimensions),
+    estimatedConstruction: text(data.estimatedConstruction ?? data.duration),
+    parkingSpaces: Number(data.parkingSpaces ?? 0),
+    kitchens: Number(data.kitchens ?? 0),
+    livingRooms: Number(data.livingRooms ?? 0),
+    diningRooms: Number(data.diningRooms ?? 0),
+    specifications: strings(data.specifications),
+    duration: text(data.duration ?? data.estimatedConstruction),
   } as Project;
 }
 

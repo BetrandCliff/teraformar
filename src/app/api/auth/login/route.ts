@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       { error: "Admin login is not configured" },
       { status: 503 },
     );
-  let body: { email?: string; password?: string };
+  let body: { email?: string; password?: string; rememberMe?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -62,14 +62,14 @@ export async function POST(request: Request) {
       { error: "Invalid email or password" },
       { status: 401 },
     );
-  const session = createAdminSession(user.email);
+  const session = createAdminSession(user.email, body.rememberMe === true);
   const out = NextResponse.json({ ok: true });
   out.cookies.set("buildvision_session", session.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: session.maxAge,
+    ...(session.rememberMe ? { maxAge: session.maxAge } : {}),
   });
   return out;
 }
