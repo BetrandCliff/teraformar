@@ -179,7 +179,6 @@
 
 
 
-```yaml
 name: Deploy Teraformar
 
 on:
@@ -215,7 +214,7 @@ jobs:
         run: |
           echo "${{ github.sha }}" > .deploy-trigger
 
-      - name: Deploy to cPanel
+      - name: Deploy application files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -225,8 +224,6 @@ jobs:
           protocol: ftps
           server-dir: ./
           local-dir: ./
-          timeout: 120000
-          log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**
@@ -235,7 +232,35 @@ jobs:
             **/.env.*
             **/node_modules/**
             **/.next/**
+            **/.next-deploy.zip
             **/deploy.log
             **/.deployed-commit
             **/stderr.log
-```
+
+      - name: Upload Next.js build
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          protocol: ftps
+          server-dir: ./
+          local-dir: ./
+          exclude: |
+            **
+            !.next-deploy.zip
+
+      - name: Upload deployment trigger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          protocol: ftps
+          server-dir: ./
+          local-dir: ./
+          exclude: |
+            **
+            !.deploy-trigger
