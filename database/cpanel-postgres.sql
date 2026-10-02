@@ -1,6 +1,5 @@
 -- BuildVision tables required by the current Next.js application.
--- Run this against the cPanel database. Existing tables are left in place;
--- CREATE TABLE IF NOT EXISTS will not reshape a table with a different schema.
+-- Optional design details are stored in the designs.data JSONB field.
 CREATE TABLE IF NOT EXISTS projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   slug text UNIQUE NOT NULL,
@@ -12,9 +11,11 @@ CREATE TABLE IF NOT EXISTS designs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   slug text UNIQUE NOT NULL,
   title text NOT NULL,
-  data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  data jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE designs ADD COLUMN IF NOT EXISTS data jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE designs ALTER COLUMN data DROP NOT NULL;
 CREATE TABLE IF NOT EXISTS documents (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -53,7 +54,3 @@ CREATE TABLE IF NOT EXISTS site_settings (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 INSERT INTO site_settings (id, data) VALUES (1, '{"companyName":"BuildVision","email":"hello@buildvision.cm","phone":"+237 6XX XXX XXX","location":"Buea, Cameroon"}'::jsonb) ON CONFLICT (id) DO NOTHING;
-
-
-
-
