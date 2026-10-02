@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ToastProvider";
 
 const emptyRoom = (): DesignRoom => ({ name: "", type: "", area: "", notes: "" });
-const makeFloor = (index: number): DesignFloor => ({ label: index === 0 ? "Ground floor" : `Floor ${index + 1}`, rooms: [emptyRoom()] });
+const makeFloor = (index: number): DesignFloor => ({ label: index === 0 ? "Ground floor" : `Floor ${index + 1}`, area: "", rooms: [emptyRoom()] });
 
 export default function ProjectEditor({ project }: { project?: Project }) {
   const [status, setStatus] = useState("");
@@ -49,6 +49,7 @@ export default function ProjectEditor({ project }: { project?: Project }) {
       const title = String(raw.title ?? "");
       const cleanedFloors = floorDetails.map((floor) => ({
         label: floor.label?.trim() ?? "",
+        area: floor.area?.trim() ?? "",
         rooms: floor.rooms.map((room) => ({ name: room.name?.trim() ?? "", type: room.type?.trim() ?? "", area: room.area?.trim() ?? "", notes: room.notes?.trim() ?? "" })),
       }));
       const data = { ...project, ...raw, title, image, gallery, slug: project?.slug ?? title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), bedrooms: Number(raw.bedrooms || 0), bathrooms: Number(raw.bathrooms || 0), floors: cleanedFloors.length, floorDetails: cleanedFloors, floorPlans, architecturalDrawings, structuralDrawings, documents };
@@ -70,7 +71,7 @@ export default function ProjectEditor({ project }: { project?: Project }) {
     <section className="card p-6 md:p-7"><div className="mb-6"><p className="text-xs font-bold uppercase tracking-wider text-[#147ee8]">02 · Floor plan</p><h2 className="mt-1 text-lg font-black">Floors and rooms</h2><p className="mt-1 text-sm text-slate-500">Set the number of floors, then add room details for each one.</p></div>
       <label className="grid max-w-xs gap-2 text-sm font-semibold text-slate-700">Number of floors<input type="number" min="1" max="30" value={floorDetails.length} onChange={(event) => setFloorCount(Math.min(30, Math.max(1, Number(event.target.value) || 1)))} className="input"/></label>
       <div className="mt-5 grid gap-5">{floorDetails.map((floor, floorIndex) => <div key={floorIndex} className="rounded-2xl border border-slate-200 p-4 md:p-5">
-        <div className="flex flex-wrap items-end gap-3"><label className="grid min-w-52 flex-1 gap-2 text-sm font-semibold text-slate-700">Floor name or level<input value={floor.label ?? ""} onChange={(event) => updateFloor(floorIndex, { label: event.target.value })} className="input" placeholder={`Floor ${floorIndex + 1}`}/></label><button type="button" className="btn btn-outline" onClick={() => updateFloor(floorIndex, { rooms: [...floor.rooms, emptyRoom()] })}>Add room</button></div>
+        <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end"><label className="grid gap-2 text-sm font-semibold text-slate-700">Floor name or level<input value={floor.label ?? ""} onChange={(event) => updateFloor(floorIndex, { label: event.target.value })} className="input" placeholder={`Floor ${floorIndex + 1}`}/></label><label className="grid gap-2 text-sm font-semibold text-slate-700">Floor area<input value={floor.area ?? ""} onChange={(event) => updateFloor(floorIndex, { area: event.target.value })} className="input" placeholder="e.g. 120 m²"/></label><button type="button" className="btn btn-outline" onClick={() => updateFloor(floorIndex, { rooms: [...floor.rooms, emptyRoom()] })}>Add room</button></div>
         <div className="mt-4 grid gap-3">{floor.rooms.map((room, roomIndex) => <div key={roomIndex} className="grid gap-3 rounded-xl bg-slate-50 p-3 md:grid-cols-2">
           <label className="grid gap-1.5 text-xs font-semibold text-slate-600">Room name<input value={room.name ?? ""} onChange={(event) => updateRoom(floorIndex, roomIndex, { name: event.target.value })} className="input bg-white" placeholder="e.g. Main bedroom"/></label>
           <label className="grid gap-1.5 text-xs font-semibold text-slate-600">Room type<input value={room.type ?? ""} onChange={(event) => updateRoom(floorIndex, roomIndex, { type: event.target.value })} className="input bg-white" placeholder="e.g. Bedroom, kitchen, office"/></label>

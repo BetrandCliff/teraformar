@@ -9,6 +9,7 @@ const floorDetails = (value: unknown): DesignFloor[] => {
   if (!Array.isArray(value)) return [];
   return value.filter((floor): floor is Record<string, unknown> => !!floor && typeof floor === "object").map((floor) => ({
     label: text(floor.label),
+    area: text(floor.area),
     rooms: Array.isArray(floor.rooms) ? floor.rooms.filter((room): room is Record<string, unknown> => !!room && typeof room === "object").map((room): DesignRoom => ({
       name: text(room.name), type: text(room.type), area: text(room.area), notes: text(room.notes),
     })) : [],

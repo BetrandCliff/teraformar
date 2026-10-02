@@ -14,6 +14,7 @@ export type DesignRoom = {
 };
 export type DesignFloor = {
   label?: string;
+  area?: string;
   rooms: DesignRoom[];
 };
 export type Design = Project & {

@@ -54,6 +54,7 @@ export default function DesignEditor({ design }: { design?: Design }) {
       const title = String(raw.title ?? "").trim();
       const cleanedFloors = floorDetails.map((floor) => ({
         label: floor.label?.trim() ?? "",
+        area: floor.area?.trim() ?? "",
         rooms: floor.rooms.map((room) => ({
           name: room.name?.trim() ?? "",
           type: room.type?.trim() ?? "",
