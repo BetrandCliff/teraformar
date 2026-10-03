@@ -40,7 +40,9 @@ export default function DocumentsPage() {
     setSaving(true);
     setStatus("Uploading document…");
     try {
-      const response = await fetch("/api/documents", { method: "POST", body: new FormData(form) });
+      const formData = new FormData(form);
+      formData.set("id", crypto.randomUUID());
+      const response = await fetch("/api/documents", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Could not upload document.");
       setDocs((items) => [data, ...items]);

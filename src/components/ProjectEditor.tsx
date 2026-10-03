@@ -183,6 +183,7 @@ export default function ProjectEditor({ project }: { project?: Project }) {
       const data = {
         ...project,
         ...raw,
+        id: project?.id ?? crypto.randomUUID(),
         title,
         videoUrl,
         image,

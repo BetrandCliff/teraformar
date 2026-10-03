@@ -62,25 +62,11 @@ export async function POST(request: Request) {
       { error: "Invalid email or password" },
       { status: 401 },
     );
-  let admins: { id: string }[];
-  try {
-    admins = await typeormRequest<{ id: string }[]>("admins", {
-      query: `?select=id&id=eq.${encodeURIComponent(user.id)}&limit=1`,
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to verify the administrator account" },
-      { status: 503 },
-    );
-  }
-  const admin = admins[0];
-  if (!admin)
-    return NextResponse.json(
-      { error: "This user is not linked to an administrator account" },
-      { status: 403 },
-    );
-
-  const session = createAdminSession(admin.id, user.email, body.rememberMe === true);
+  const session = createAdminSession(
+    user.id,
+    user.email,
+    body.rememberMe === true,
+  );
   const out = NextResponse.json({ ok: true });
   out.cookies.set("buildvision_session", session.token, {
     httpOnly: true,

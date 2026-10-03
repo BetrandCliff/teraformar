@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { typeormRequest } from "@/lib/typeorm";
 import { cookies } from "next/headers";
 import { getAdminIdFromSession, isAdminAuthenticated } from "@/lib/session";
-import { createUuid } from "@/lib/uuid";
+import { isUuid } from "@/lib/uuid";
 import { toProject } from "@/lib/projects";
 
 type ProjectRow = { id: string; slug: string; title: string; data: Record<string, unknown> };
@@ -23,12 +23,12 @@ export async function POST(request: Request) {
   if (!adminId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let data: Record<string, unknown>;
   try { data = await request.json(); } catch { return NextResponse.json({ error: "A valid JSON object is required" }, { status: 400 }); }
-  if (!data || typeof data !== "object" || Array.isArray(data) || typeof data.title !== "string" || !data.title.trim()) {
-    return NextResponse.json({ error: "Project title is required" }, { status: 400 });
+  if (!data || typeof data !== "object" || Array.isArray(data) || typeof data.title !== "string" || !data.title.trim() || !isUuid(data.id)) {
+    return NextResponse.json({ error: "A project title and valid UUID are required" }, { status: 400 });
   }
   const slug = typeof data.slug === "string" && data.slug ? data.slug : data.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   try {
-    const rows = await typeormRequest<ProjectRow[]>("projects", { method: "POST", body: { id: createUuid(), created_by: adminId, slug, title: data.title, data } });
+    const rows = await typeormRequest<ProjectRow[]>("projects", { method: "POST", body: { id: data.id, created_by: adminId, slug, title: data.title, data } });
     const row = rows[0];
     return NextResponse.json({ ...row.data, id: row.id, slug: row.slug, title: row.title }, { status: 201 });
   } catch (error) {

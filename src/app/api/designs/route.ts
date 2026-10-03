@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { typeormRequest } from "@/lib/typeorm";
 import { getAdminIdFromSession, isAdminAuthenticated } from "@/lib/session";
-import { createUuid } from "@/lib/uuid";
+import { isUuid } from "@/lib/uuid";
 import { toDesign } from "@/lib/projects";
 type DesignRow = {
     id: string;
@@ -46,9 +46,14 @@ export async function POST(request: Request) {
             { status: 400 },
         );
     }
-    if (!data || typeof data.title !== "string" || !data.title.trim())
+    if (
+        !data ||
+        typeof data.title !== "string" ||
+        !data.title.trim() ||
+        !isUuid(data.id)
+    )
         return NextResponse.json(
-            { error: "Design name is required" },
+            { error: "A design name and valid UUID are required" },
             { status: 400 },
         );
     const slug =
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
     try {
         const rows = await typeormRequest<DesignRow[]>("designs", {
             method: "POST",
-            body: { id: createUuid(), created_by: adminId, slug, title: data.title, data },
+            body: { id: data.id, created_by: adminId, slug, title: data.title, data },
         });
         const row = rows[0];
         return NextResponse.json(

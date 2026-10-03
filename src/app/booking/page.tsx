@@ -12,7 +12,10 @@ export default function Booking() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const values = Object.fromEntries(new FormData(form).entries());
+    const values = {
+      id: crypto.randomUUID(),
+      ...Object.fromEntries(new FormData(form).entries()),
+    };
     setStatus("Sending your appointment request…");
     try {
       const response = await fetch("/api/appointments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });

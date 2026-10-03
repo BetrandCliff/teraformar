@@ -10,7 +10,7 @@ export default function ContactForm(){
   async function submit(event:FormEvent<HTMLFormElement>){
     event.preventDefault();const form=event.currentTarget;setStatus("Sending…");
     try{
-      const response=await fetch("/api/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});
+      const response=await fetch("/api/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:crypto.randomUUID(),...Object.fromEntries(new FormData(form).entries())})});
       const result=await response.json();if(!response.ok)throw new Error(result.error??"Could not send the message");
       showToast("Message sent successfully.");form.reset();returnToPreviousSection(router,"/");
     }catch(error){const message=error instanceof Error?error.message:"Could not send the message. Please try again.";setStatus(message);showToast(message,"error")}

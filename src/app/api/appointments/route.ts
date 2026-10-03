@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { typeormRequest } from "@/lib/typeorm";
 import { cookies } from "next/headers";
 import { isAdminAuthenticated } from "@/lib/typeorm";
+import { isUuid } from "@/lib/uuid";
 
 export async function GET() {
   const token = (await cookies()).get("buildvision_session")?.value;
@@ -38,20 +39,21 @@ export async function POST(request: Request) {
   }
   if (
     !body ||
+    !isUuid(body.id) ||
     typeof body.name !== "string" ||
     !body.name.trim() ||
     typeof body.email !== "string" ||
     !body.email.includes("@")
   ) {
     return NextResponse.json(
-      { error: "Name and a valid email are required" },
+      { error: "A valid UUID, name, and email are required" },
       { status: 400 },
     );
   }
   try {
     const rows = await typeormRequest<unknown[]>("appointments", {
       method: "POST",
-      body,
+      body: { ...body, id: body.id },
     });
     return NextResponse.json(rows[0], { status: 201 });
   } catch (error) {

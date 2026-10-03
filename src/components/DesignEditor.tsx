@@ -86,6 +86,7 @@ export default function DesignEditor({ design }: { design?: Design }) {
       const data = {
         ...design,
         ...raw,
+        id: design?.id ?? crypto.randomUUID(),
         title,
         videoUrl,
         image,
