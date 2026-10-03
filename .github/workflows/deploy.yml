@@ -209,7 +209,7 @@ jobs:
         run: |
           echo "${{ github.sha }}" > .deploy-trigger
 
-      - name: Deploy application files
+      - name: Deploy to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
