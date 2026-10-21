@@ -1,3 +1,5 @@
+
+
 # name: Deploy Teraformar
 
 # on:
@@ -10,25 +12,37 @@
 #     runs-on: ubuntu-latest
 
 #     steps:
+#       # 1. Get latest source code
 #       - name: Checkout repository
 #         uses: actions/checkout@v4
 
+#       # 2. Setup Node.js
 #       - name: Setup Node.js
 #         uses: actions/setup-node@v4
 #         with:
 #           node-version: 22
 #           cache: npm
 
+#       # 3. Install dependencies
 #       - name: Install dependencies
 #         run: npm ci
 
+#       # 4. Build Next.js production application
 #       - name: Build application
 #         run: npm run build
 
+#       # 5. Create deployment information
 #       - name: Create deployment trigger
 #         run: |
 #           echo "${{ github.sha }}" > .deploy-trigger
 
+#       # 6. Create Passenger restart file
+#       - name: Create Passenger restart file
+#         run: |
+#           mkdir -p tmp
+#           touch tmp/restart.txt
+
+#       # 7. Deploy everything to cPanel
 #       - name: Deploy to cPanel
 #         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
 #         with:
@@ -39,6 +53,7 @@
 #           protocol: ftps
 #           server-dir: ./
 #           local-dir: ./
+
 #           exclude: |
 #             **/.git*
 #             **/.git*/**
@@ -51,6 +66,25 @@
 #             **/.deployed-commit
 #             **/stderr.log
 
+#       # 8. Wait briefly for FTP upload to finish
+#       - name: Wait for deployment
+#         run: |
+#           echo "Files uploaded successfully."
+#           echo "Passenger restart file uploaded."
+#           sleep 5
+
+#       # 9. Deployment summary
+#       - name: Deployment complete
+#         run: |
+#           echo "======================================"
+#           echo "Teraformar deployment completed"
+#           echo "Commit: ${{ github.sha }}"
+#           echo "Next.js build: SUCCESS"
+#           echo "Files uploaded: SUCCESS"
+#           echo "Passenger restart: TRIGGERED"
+#           echo "======================================"
+
+
 
 name: Deploy Teraformar
 
@@ -62,6 +96,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     steps:
       # 1. Get latest source code
@@ -83,18 +118,25 @@ jobs:
       - name: Build application
         run: npm run build
 
-      # 5. Create deployment information
-      - name: Create deployment trigger
+      # 5. Verify production build
+      - name: Verify build output
         run: |
-          echo "${{ github.sha }}" > .deploy-trigger
+          test -d .next
+          test -d .next/static
+          echo "Next.js build output exists."
+          find .next/static -maxdepth 2 -type d | head -40
 
-      # 6. Create Passenger restart file
+      # 6. Create deployment trigger
+      - name: Create deployment trigger
+        run: echo "${{ github.sha }}" > .deploy-trigger
+
+      # 7. Create Passenger restart file
       - name: Create Passenger restart file
         run: |
           mkdir -p tmp
           touch tmp/restart.txt
 
-      # 7. Deploy everything to cPanel
+      # 8. Deploy to cPanel
       - name: Deploy to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -105,33 +147,25 @@ jobs:
           protocol: ftps
           server-dir: ./
           local-dir: ./
+          state-name: .ftp-deploy-sync-state.json
+          log-level: verbose
+          timeout: 60000
 
           exclude: |
             **/.git*
             **/.git*/**
             **/.github/**
             **/node_modules/**
+            **/.next/cache/**
             **/.env
             **/.env.*
-            **/.next/cache/**
             **/deploy.log
             **/.deployed-commit
             **/stderr.log
 
-      # 8. Wait briefly for FTP upload to finish
-      - name: Wait for deployment
-        run: |
-          echo "Files uploaded successfully."
-          echo "Passenger restart file uploaded."
-          sleep 5
-
       # 9. Deployment summary
       - name: Deployment complete
         run: |
-          echo "======================================"
-          echo "Teraformar deployment completed"
+          echo "Deployment upload completed."
           echo "Commit: ${{ github.sha }}"
-          echo "Next.js build: SUCCESS"
-          echo "Files uploaded: SUCCESS"
-          echo "Passenger restart: TRIGGERED"
-          echo "======================================"
+          echo "Inspect the FTP logs above for any errors."
