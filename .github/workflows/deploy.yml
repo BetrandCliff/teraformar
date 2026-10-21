@@ -128,7 +128,7 @@ jobs:
 
       # 6. Create deployment trigger
       - name: Create deployment trigger
-        run: echo "${{ github.sha }}" > .deploy-trigger
+        run: echo "${GITHUB_SHA}" > .deploy-trigger
 
       # 7. Create Passenger restart file
       - name: Create Passenger restart file
@@ -136,17 +136,20 @@ jobs:
           mkdir -p tmp
           touch tmp/restart.txt
 
-      # 8. Deploy to cPanel
+      # 8. Deploy to cPanel using FTPS
       - name: Deploy to cPanel
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
           protocol: ftps
+
+          # Confirm this is the correct remote application directory.
           server-dir: ./
           local-dir: ./
+
           state-name: .ftp-deploy-sync-state.json
           log-level: verbose
           timeout: 60000
@@ -165,7 +168,8 @@ jobs:
 
       # 9. Deployment summary
       - name: Deployment complete
+        if: success()
         run: |
-          echo "Deployment upload completed."
-          echo "Commit: ${{ github.sha }}"
-          echo "Inspect the FTP logs above for any errors."
+          echo "Deployment completed successfully."
+          echo "Commit: ${GITHUB_SHA}"
+          echo "Target: cPanel via FTPS"
