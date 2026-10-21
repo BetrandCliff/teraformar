@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 type ImageLightboxProps = {
@@ -45,9 +46,9 @@ export default function ImageLightbox({
       >
         <img src={src} alt={alt} className={imageClassName} />
       </button>
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90 p-4 backdrop-blur-sm sm:p-8"
+          className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center overflow-auto bg-black/90 p-3 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-label={`Image preview: ${alt}`}
@@ -65,9 +66,10 @@ export default function ImageLightbox({
             src={src}
             alt={alt}
             onClick={(event) => event.stopPropagation()}
-            className="h-auto w-auto max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] cursor-default rounded-lg object-contain shadow-2xl sm:max-h-[calc(100dvh-4rem)] sm:max-w-[calc(100vw-4rem)]"
+            className="block h-auto w-auto max-h-[calc(100dvh-1.5rem)] max-w-[calc(100vw-1.5rem)] cursor-default rounded-lg object-contain shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:max-w-[calc(100vw-3rem)]"
           />
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

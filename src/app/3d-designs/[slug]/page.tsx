@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Maximize2, Rotate3D, ZoomIn, Move3D } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getDesigns } from "@/lib/projects";
 import ImageLightbox from "@/components/ImageLightbox";
 export const dynamic = "force-dynamic";
@@ -26,29 +26,14 @@ export default async function DesignDetails({
       </div>
       <section className="pb-20">
         <div className="container grid gap-8 lg:grid-cols-[1.3fr_.7fr]">
-          <div className="overflow-hidden rounded-3xl bg-slate-950 p-4">
-            <div className="relative aspect-video overflow-hidden rounded-2xl">
+          <div className="h-fit overflow-hidden rounded-3xl bg-black">
+            <div className="overflow-hidden rounded-2xl">
               <ImageLightbox
                 src={p.image}
-                className="h-full w-full"
-                imageClassName="h-full w-full object-cover opacity-80"
+                className="h-auto w-full"
+                imageClassName="block h-auto max-h-[75vh] w-full object-contain"
                 alt={p.title}
               />
-              <div className="absolute inset-0 grid place-items-center">
-                <div className="rounded-full bg-white/15 p-5 backdrop-blur">
-                  <Rotate3D size={34} className="text-white" />
-                </div>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4 flex justify-between text-white">
-                <span className="flex gap-4">
-                  <Move3D />
-                  <ZoomIn />
-                  <Maximize2 />
-                </span>
-                <span className="rounded bg-black/50 px-3 py-1 text-xs">
-                  Interactive Preview
-                </span>
-              </div>
             </div>
           </div>
           <div>

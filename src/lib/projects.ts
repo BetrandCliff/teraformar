@@ -80,7 +80,10 @@ export function toDesign(row: ProjectRow): Design {
     diningRooms: Number(data.diningRooms ?? 1),
     dimensions: text(data.dimensions),
     estimatedConstruction: text(data.estimatedConstruction),
-    interiorImages: strings(data.interiorImages),
+    // Older design rows and project-derived concepts used `gallery` for these images.
+    interiorImages: strings(data.interiorImages).length
+      ? strings(data.interiorImages)
+      : strings(data.gallery),
     specifications: strings(data.specifications),
     floorDetails: savedFloors,
   };
