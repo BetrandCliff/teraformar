@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
+import { Trash2 } from "lucide-react";
 import type {
   DesignApartment,
   DesignFloor,
@@ -40,6 +41,8 @@ const normalizeFloor = (floor: DesignFloor, index: number): DesignFloor => ({
 export default function ProjectEditor({ project }: { project?: Project }) {
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [image, setImage] = useState(project?.image ?? "");
+  const [gallery, setGallery] = useState(project?.gallery ?? []);
   const [floorDetails, setFloorDetails] = useState<DesignFloor[]>(() =>
     project?.floorDetails?.length
       ? project.floorDetails.map(normalizeFloor)
@@ -126,17 +129,17 @@ export default function ProjectEditor({ project }: { project?: Project }) {
       const galleryFiles = (
         form.elements.namedItem("gallery_files") as HTMLInputElement
       ).files;
-      let image = project?.image ?? "";
+      let savedImage = image;
       if (mainFiles?.length) {
         setStatus("Uploading main project image…");
-        image = (await uploadMediaFiles(mainFiles, "projects"))[0];
+        savedImage = (await uploadMediaFiles(mainFiles, "projects"))[0];
       }
-      if (!image) throw new Error("Choose a main project image.");
-      let gallery = project?.gallery ?? [];
+      if (!savedImage) throw new Error("Choose a main project image.");
+      let savedGallery = gallery;
       if (galleryFiles?.length) {
         setStatus("Uploading gallery images…");
-        gallery = [
-          ...gallery,
+        savedGallery = [
+          ...savedGallery,
           ...(await uploadMediaFiles(galleryFiles, "projects")),
         ];
       }
@@ -186,8 +189,8 @@ export default function ProjectEditor({ project }: { project?: Project }) {
         id: project?.id ?? crypto.randomUUID(),
         title,
         videoUrl,
-        image,
-        gallery,
+        image: savedImage,
+        gallery: savedGallery,
         slug:
           project?.slug ??
           title
@@ -608,23 +611,35 @@ export default function ProjectEditor({ project }: { project?: Project }) {
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
-          <label className="grid content-start gap-2 text-sm font-semibold text-slate-700">
-            Main project image{" "}
+          <div className="grid content-start gap-2 text-sm font-semibold text-slate-700">
+            <label htmlFor="main_image_files">Main project image</label>
             <input
-              required={!project?.image}
+              id="main_image_files"
+              required={!image}
               name="main_image_files"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
               className="input"
             />
-            {project?.image && (
+            {image && (
+              <div className="relative">
               <img
-                src={project.image}
+                src={image}
                 alt="Current project cover"
                 className="mt-2 aspect-video w-full rounded-xl object-cover"
               />
+                <button
+                  type="button"
+                  aria-label="Remove main project image"
+                  title="Remove main project image"
+                  onClick={() => setImage("")}
+                  className="absolute right-2 top-4 grid size-9 place-items-center rounded-full bg-white text-red-600 shadow transition hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             )}
-          </label>
+          </div>
           <label className="grid content-start gap-2 text-sm font-semibold text-slate-700">
             Gallery images{" "}
             <input
@@ -634,14 +649,40 @@ export default function ProjectEditor({ project }: { project?: Project }) {
               accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
               className="input"
             />
-            {!!project?.gallery.length && (
+            {!!gallery.length && (
               <span className="text-xs font-normal text-slate-500">
-                {project.gallery.length} existing gallery image(s); new uploads
+                {gallery.length} gallery image(s); new uploads
                 are added to the gallery.
               </span>
             )}
           </label>
         </div>
+        {!!gallery.length && (
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {gallery.map((url, index) => (
+              <div key={`${url}-${index}`} className="relative">
+                <img
+                  src={url}
+                  alt={`Project gallery image ${index + 1}`}
+                  className="aspect-video w-full rounded-xl object-cover"
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove project gallery image ${index + 1}`}
+                  title="Remove image"
+                  onClick={() =>
+                    setGallery((current) =>
+                      current.filter((_, currentIndex) => currentIndex !== index),
+                    )
+                  }
+                  className="absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-white text-red-600 shadow transition hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
       <section className="card p-6 md:p-7">
         <div className="mb-6">

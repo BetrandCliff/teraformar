@@ -35,10 +35,16 @@ async function getDataSource() {
     ssl:
       process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   });
-  const initializePromise = dataSource.initialize().then((connected) => {
-    globalForTypeOrm.typeormDataSource = connected;
-    return connected;
-  });
+  const initializePromise = dataSource
+    .initialize()
+    .then((connected) => {
+      globalForTypeOrm.typeormDataSource = connected;
+      return connected;
+    })
+    .catch((error: unknown) => {
+      globalForTypeOrm.typeormDataSourcePromise = undefined;
+      throw error;
+    });
   globalForTypeOrm.typeormDataSourcePromise = initializePromise;
   return initializePromise;
 }

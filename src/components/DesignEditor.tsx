@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
+import { Trash2 } from "lucide-react";
 import type { Design, DesignApartment, DesignFloor, DesignRoom } from "@/lib/data";
 import { uploadMediaFiles } from "@/lib/upload-media";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,8 @@ const normalizeFloor = (floor: DesignFloor, index: number): DesignFloor => ({
 export default function DesignEditor({ design }: { design?: Design }) {
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [image, setImage] = useState(design?.image ?? "");
+  const [interiorImages, setInteriorImages] = useState(design?.interiorImages ?? []);
   const [floorDetails, setFloorDetails] = useState<DesignFloor[]>(() => {
     return design?.floorDetails?.map(normalizeFloor) ?? [];
   });
@@ -48,24 +51,24 @@ export default function DesignEditor({ design }: { design?: Design }) {
     const raw = Object.fromEntries([...entries.entries()].filter(([key]) => !key.endsWith("_file") && key !== "interior_files"));
     try {
       setSaving(true);
-      let image = design?.image ?? "";
+      let savedImage = image;
       const imageFiles = (form.elements.namedItem("cover_file") as HTMLInputElement).files;
       if (imageFiles?.length) {
         setStatus("Uploading design cover…");
-        image = (await uploadMediaFiles(imageFiles, "designs"))[0];
+        savedImage = (await uploadMediaFiles(imageFiles, "designs"))[0];
       }
-      if (!image) throw new Error("Choose a design cover image.");
+      if (!savedImage) throw new Error("Choose a design cover image.");
       let modelUrl = design?.modelUrl ?? "";
       const modelFiles = (form.elements.namedItem("model_file") as HTMLInputElement).files;
       if (modelFiles?.length) {
         setStatus("Uploading 3D model…");
         modelUrl = (await uploadMediaFiles(modelFiles, "designs"))[0];
       }
-      let interiorImages = design?.interiorImages ?? [];
+      let savedInteriorImages = interiorImages;
       const interiorFiles = (form.elements.namedItem("interior_files") as HTMLInputElement).files;
       if (interiorFiles?.length) {
         setStatus("Uploading gallery images…");
-        interiorImages = [...interiorImages, ...(await uploadMediaFiles(interiorFiles, "designs"))];
+        savedInteriorImages = [...savedInteriorImages, ...(await uploadMediaFiles(interiorFiles, "designs"))];
       }
       const title = String(raw.title ?? "").trim();
       const videoUrl = String(raw.videoUrl ?? "").trim();
@@ -89,9 +92,9 @@ export default function DesignEditor({ design }: { design?: Design }) {
         id: design?.id ?? crypto.randomUUID(),
         title,
         videoUrl,
-        image,
+        image: savedImage,
         modelUrl,
-        interiorImages,
+        interiorImages: savedInteriorImages,
         floorDetails: cleanedFloors,
         slug: design?.slug ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
         floors: cleanedFloors.length,
@@ -159,9 +162,14 @@ export default function DesignEditor({ design }: { design?: Design }) {
     </section>
 
     <section className="card p-6 md:p-7"><div className="mb-6"><p className="text-xs font-bold uppercase tracking-wider text-[#147ee8]">03 · Media</p><h2 className="mt-1 text-lg font-black">Design files and imagery</h2><p className="mt-1 text-sm text-slate-500">A cover image is required. The GLB model and gallery images are optional.</p></div><div className="grid gap-5 md:grid-cols-2">
-      <label className="grid content-start gap-2 text-sm font-semibold text-slate-700">Cover image<input required={!design?.image} name="cover_file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" className="input"/>{design?.image&&<img src={design.image} alt="Current design cover" className="mt-2 aspect-video w-full rounded-xl object-cover"/>}</label>
+      <div className="grid content-start gap-2 text-sm font-semibold text-slate-700">
+        <label htmlFor="cover_file">Cover image</label>
+        <input required={!image} id="cover_file" name="cover_file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" className="input"/>
+        {image&&<div className="relative"><img src={image} alt="Current design cover" className="mt-2 aspect-video w-full rounded-xl object-cover"/><button type="button" aria-label="Remove design cover image" title="Remove design cover image" onClick={() => setImage("")} className="absolute right-2 top-4 grid size-9 place-items-center rounded-full bg-white text-red-600 shadow transition hover:bg-red-50"><Trash2 size={16}/></button></div>}
+      </div>
       <label className="grid content-start gap-2 text-sm font-semibold text-slate-700">3D model file (.glb)<input name="model_file" type="file" accept=".glb,model/gltf-binary,application/octet-stream" className="input"/>{design?.modelUrl&&<a href={design.modelUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#147ee8] hover:underline">Open current model</a>}</label>
-      <label className="grid gap-2 text-sm font-semibold text-slate-700 md:col-span-2">Interior/gallery images<input name="interior_files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif,image/gif" className="input"/>{!!design?.interiorImages.length&&<span className="text-xs font-normal text-slate-500">{design.interiorImages.length} existing image(s); new uploads are added to the gallery.</span>}</label>
+      <label className="grid gap-2 text-sm font-semibold text-slate-700 md:col-span-2">Interior/gallery images<input name="interior_files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif,image/gif" className="input"/>{!!interiorImages.length&&<span className="text-xs font-normal text-slate-500">{interiorImages.length} image(s); new uploads are added to the gallery.</span>}</label>
+      {!!interiorImages.length&&<div className="grid grid-cols-2 gap-3 md:col-span-2 sm:grid-cols-3 lg:grid-cols-4">{interiorImages.map((url,index)=><div key={`${url}-${index}`} className="relative"><img src={url} alt={`Design gallery image ${index+1}`} className="aspect-video w-full rounded-xl object-cover"/><button type="button" aria-label={`Remove design gallery image ${index+1}`} title="Remove image" onClick={()=>setInteriorImages(current=>current.filter((_,currentIndex)=>currentIndex!==index))} className="absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-white text-red-600 shadow transition hover:bg-red-50"><Trash2 size={16}/></button></div>)}</div>}
       <label className="grid gap-2 text-sm font-semibold text-slate-700 md:col-span-2">Design video link<input name="videoUrl" type="url" defaultValue={design?.videoUrl ?? ""} className="input" placeholder="https://…"/><span className="text-xs font-normal text-slate-500">Add a YouTube, Vimeo, or other video URL for visitors to watch.</span></label>
     </div></section>
     <section className="card p-6 md:p-7"><p className="text-xs font-bold uppercase tracking-wider text-[#147ee8]">04 · Description</p><h2 className="mt-1 text-lg font-black">Design overview</h2><label className="mt-4 grid gap-2 text-sm font-semibold text-slate-700">Description<textarea name="description" defaultValue={design?.description ?? ""} className="input min-h-32" placeholder="Explain the design concept and key features…"/></label></section>

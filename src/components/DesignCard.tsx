@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { BedDouble, Bath, Toilet, Maximize } from "lucide-react";
 import type { Design } from "@/lib/data";
+import ImageLightbox from "@/components/ImageLightbox";
 
 export default function DesignCard({d}:{d:Design}) {
   return <article className="public-project-card card group">
-    <Link href={`/3d-designs/${d.slug}`} className="relative block h-60 overflow-hidden bg-[#e9e5dc]"><img src={d.image} alt={d.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"/><span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#34463c]">{d.category} concept</span></Link>
+    <div className="relative h-60 overflow-hidden bg-[#e9e5dc]"><ImageLightbox src={d.image} alt={d.title} className="h-full w-full" imageClassName="h-full w-full object-cover transition duration-700 group-hover/image:scale-[1.04]"/><span className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#34463c]">{d.category} concept</span></div>
     <div className="p-5 md:p-6">
       <div className="flex items-center justify-between gap-3"><span className="text-[10px] font-bold uppercase tracking-[.16em] text-[#a96645]">{d.status}</span><span className="text-xs text-slate-500">{d.location}</span></div>
       <h3 className="mt-2 text-xl font-bold tracking-tight">{d.title}</h3>
